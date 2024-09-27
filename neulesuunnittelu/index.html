@@ -76,7 +76,7 @@
     </style>
 </head>
 <body>
-    <a href="../index.html">Takaisin pääsivulle</a>
+    <a href="../index.html"><button>Takaisin pääsivulle</button></a>
 
     <h1>Neulesuunnittelutyökalu</h1>
     <p>Valitse väri ja klikkaa ruudukkoa luodaksesi kuvion.</p>
@@ -96,7 +96,6 @@
     <div class="color-picker">
         <label for="color">Valitse väri:</label>
         <input type="color" id="color" value="#000000">
-        <button onclick="clearGrid()">Tyhjennä ruudukko</button>
     </div>
 
     <div class="color-palette">
@@ -108,6 +107,7 @@
         <div class="palette-color" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></div>
     </div>
 
+    <button onclick="clearGrid()">Tyhjennä ruudukko</button>
     <button onclick="downloadPattern()">Tallenna suunnitelma</button>
     <a id="downloadLink" class="download-link" href="" download="neulesuunnitelma.json" style="display: none;">Lataa suunnitelma</a>
     
