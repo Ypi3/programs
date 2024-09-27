@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laajennettu Neulesuunnittelutyökalu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #grid {
+            display: grid;
+            gap: 1px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            background-color: white;
+            transition: background-color 0.3s ease;
+        }
+        .controls, .color-picker, .color-palette, .download-section {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .color-palette {
+            display: flex;
+            justify-content: center;
+        }
+        .palette-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: transform 0.2s;
+        }
+        .palette-color:hover {
+            transform: scale(1.2);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="number"], input[type="color"] {
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .download-link {
+            display: none;
+            margin-top: 10px;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+        }
+        .download-link:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html">Takaisin pääsivulle</a>
+
+    <h1>Neulesuunnittelutyökalu</h1>
+    <p>Valitse väri ja klikkaa ruudukkoa luodaksesi kuvion.</p>
+
+    <div class="controls">
+        <label for="gridWidth">Ruudukon leveys:</label>
+        <input type="number" id="gridWidth" value="20" min="1" max="100">
+        
+        <label for="gridHeight">Ruudukon korkeus:</label>
+        <input type="number" id="gridHeight" value="20" min="1" max="100">
+        
+        <button onclick="createGrid()">Luo uusi ruudukko</button>
+    </div>
+
+    <div id="grid"></div>
+
+    <div class="color-picker">
+        <label for="color">Valitse väri:</label>
+        <input type="color" id="color" value="#000000">
+        <button onclick="clearGrid()">Tyhjennä ruudukko</button>
+    </div>
+
+    <div class="color-palette">
+        <div class="palette-color" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></div>
+        <div class="palette-color" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></div>
+        <div class="palette-color" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></div>
+        <div class="palette-color" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></div>
+        <div class="palette-color" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></div>
+        <div class="palette-color" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></div>
+    </div>
+
+    <button onclick="downloadPattern()">Tallenna suunnitelma</button>
+    <a id="downloadLink" class="download-link" href="" download="neulesuunnitelma.json" style="display: none;">Lataa suunnitelma</a>
+    
+    <div>
+        <label for="fileInput">Tuo suunnitelma:</label>
+        <input type="file" id="fileInput" accept="application/json">
+    </div>
+
+    <script>
+        let gridWidth = 20;
+        let gridHeight = 20;
+        const grid = document.getElementById('grid');
+        const colorPicker = document.getElementById('color');
+
+        // Luo ruudukko toiminnallisuus
+        function createGrid() {
+            gridWidth = document.getElementById('gridWidth').value;
+            gridHeight = document.getElementById('gridHeight').value;
+            grid.innerHTML = '';  // Tyhjennä vanha ruudukko
+            grid.style.gridTemplateColumns = `repeat(${gridWidth}, 20px)`;
+            grid.style.gridTemplateRows = `repeat(${gridHeight}, 20px)`;
+
+            for (let i = 0; i < gridWidth * gridHeight; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', function() {
+                    cell.style.backgroundColor = colorPicker.value;
+                });
+                grid.appendChild(cell);
+            }
+        }
+
+        // Käytä väripalettia
+        function setColor(color) {
+            colorPicker.value = color;
+        }
+
+        // Tyhjennä ruudukko
+        function clearGrid() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.style.backgroundColor = 'white';
+            });
+        }
+
+        // Lataa suunnitelma JSON-muodossa
+        function downloadPattern() {
+            const cells = document.querySelectorAll('.cell');
+            const pattern = [];
+
+            cells.forEach(cell => {
+                pattern.push(cell.style.backgroundColor || 'white');
+            });
+
+            const blob = new Blob([JSON.stringify({ gridWidth, gridHeight, pattern })], { type: 'application/json' });
+            const link = document.getElementById('downloadLink');
+            link.href = URL.createObjectURL(blob);
+            link.style.display = 'block';  // Näytä latauslinkki
+        }
+
+        // Tuo suunnitelma JSON-muodosta ja päivitä ruudukko
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const data = JSON.parse(content);
+
+                document.getElementById('gridWidth').value = data.gridWidth;
+                document.getElementById('gridHeight').value = data.gridHeight;
+                createGrid();  // Päivitä ruudukko oikeaan kokoon
+
+                const cells = document.querySelectorAll('.cell');
+                data.pattern.forEach((color, index) => {
+                    cells[index].style.backgroundColor = color;
+                });
+            };
+            reader.readAsText(file);
+        });
+
+        // Aloituksessa luodaan oletusarvoinen 20x20 ruudukko
+        createGrid();
+    </script>
+
+</body>
+</html>

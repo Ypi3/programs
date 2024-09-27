@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pääsivu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f0f8ff;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .program-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .program-list li {
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:active {
+            background-color: #00408d;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tervetuloa!</h1>
+    <p>Valitse ohjelma alla olevasta listasta:</p>
+
+    <ul class="program-list">
+        <li><a href="neulesuunnittelu/index.html" class="btn">Neulesuunnittelutyökalu</a></li>
+        <!--
+        <li><a href="laskin/index.html" class="btn">Laskin</a></li>
+        <li><a href="muistiinpano/index.html" class="btn">Muistiinpanotyökalu</a></li>-->
+    </ul>
+
+</body>
+</html>
