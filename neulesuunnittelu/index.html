@@ -79,7 +79,7 @@
     <a href="../index.html"><button>Takaisin pääsivulle</button></a>
 
     <h1>Neulesuunnittelutyökalu</h1>
-    <p>Valitse väri ja klikkaa ruudukkoa luodaksesi kuvion.</p>
+    <p>Valitse väri ja liikuta hiirtä tai kosketa ruudukkoa luodaksesi kuvion.</p>
 
     <div class="controls">
         <label for="gridWidth">Ruudukon leveys:</label>
@@ -99,17 +99,18 @@
     </div>
 
     <div class="color-palette">
-        <div class="palette-color" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></div>
-        <div class="palette-color" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></div>
-        <div class="palette-color" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></div>
-        <div class="palette-color" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></div>
-        <div class="palette-color" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></div>
-        <div class="palette-color" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></div>
+        <div class="palette-color" id="palette1" style="background-color: #000000;" data-color="#FF0000" onclick="setColor(0)"></div>
+        <div class="palette-color" id="palette2" style="background-color: #FFFFFF;" data-color="#00FF00" onclick="setColor(1)"></div>
+        <div class="palette-color" id="palette3" style="background-color: #0000FF;" data-color="#0000FF" onclick="setColor(2)"></div>
+        <div class="palette-color" id="palette4" style="background-color: #FFFF00;" data-color="#FFFF00" onclick="setColor(3)"></div>
+        <div class="palette-color" id="palette5" style="background-color: #FF00FF;" data-color="#FF00FF" onclick="setColor(4)"></div>
+        <div class="palette-color" id="palette6" style="background-color: #00FFFF;" data-color="#00FFFF" onclick="setColor(5)"></div>
     </div>
 
+    <button id="paintAllButton">Maalaa kaikki</button>
     <button onclick="clearGrid()">Tyhjennä ruudukko</button>
     <button onclick="downloadPattern()">Tallenna suunnitelma</button>
-    <a id="downloadLink" class="download-link" href="" download="neulesuunnitelma.json" style="display: none;">Lataa suunnitelma</a>
+    <a id="downloadLink" class="download-link" href="" download="neulesuunnitelma.json">Lataa suunnitelma</a>
     
     <div>
         <label for="fileInput">Tuo suunnitelma:</label>
@@ -120,7 +121,11 @@
         let gridWidth = 20;
         let gridHeight = 20;
         const grid = document.getElementById('grid');
+        const paintAllButton = document.getElementById('paintAllButton');
         const colorPicker = document.getElementById('color');
+        let isPainting = false;
+        let longPressTimeout;
+        let colorPalette = ['#000000', '#FFFFFF', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']; // Oletusvärit
 
         // Luo ruudukko toiminnallisuus
         function createGrid() {
@@ -133,17 +138,76 @@
             for (let i = 0; i < gridWidth * gridHeight; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
-                cell.addEventListener('click', function() {
-                    cell.style.backgroundColor = colorPicker.value;
-                });
+                
+                // Hiiren ja kosketuksen tapahtumat
+                cell.addEventListener('mousedown', startPainting);
+                cell.addEventListener('mousemove', paint);
+                cell.addEventListener('mouseup', stopPainting);
+                cell.addEventListener('touchstart', startPainting, { passive: true });
+                cell.addEventListener('touchmove', paint, { passive: true });
+                cell.addEventListener('touchend', stopPainting);
+                
                 grid.appendChild(cell);
             }
         }
 
+        function startPainting(event) {
+
+            const targetCell = event.target;
+            if (targetCell && targetCell.classList.contains('cell')) {
+                targetCell.style.backgroundColor = colorPicker.value;
+            }
+
+            isPainting = true;
+            paint(event);  // Aloita maalaaminen heti
+        }
+
+        function stopPainting() {
+            isPainting = false;
+        }
+
+        function paint(event) {
+            if (isPainting) {
+                if (event.type === 'mousemove' || event.type === 'touchmove') {
+                    const targetCell = document.elementFromPoint(
+                        event.touches ? event.touches[0].clientX : event.clientX,
+                        event.touches ? event.touches[0].clientY : event.clientY
+                    );
+                    if (targetCell && targetCell.classList.contains('cell')) {
+                        targetCell.style.backgroundColor = colorPicker.value;
+                    }
+                }
+            }
+        }
+
         // Käytä väripalettia
-        function setColor(color) {
+        function setColor(colornumero) {
+            //valitaan väri
+            const color = colorPalette[colornumero];
             colorPicker.value = color;
         }
+
+        // Pitkän painalluksen tunnistus
+        function handleLongPress(paletteElement, index) {
+            longPressTimeout = setTimeout(() => {
+                const newColor = colorPicker.value;
+                paletteElement.style.backgroundColor = newColor;
+                paletteElement.setAttribute('data-color', newColor);
+                colorPalette[index] = newColor; // Päivitä väripaletti
+            }, 1000);  // 1 sekunnin pitkä painallus
+        }
+
+        // Vapautetaan pitkä painallus
+        function clearLongPress() {
+            clearTimeout(longPressTimeout);
+        }
+
+        // Lisää tapahtumat väripalettisoluille
+        document.querySelectorAll('.palette-color').forEach((paletteElement, index) => {
+            paletteElement.addEventListener('mousedown', () => handleLongPress(paletteElement, index));
+            paletteElement.addEventListener('mouseup', clearLongPress);
+            paletteElement.addEventListener('mouseleave', clearLongPress);  // Jos hiiri poistuu, peruuta
+        });
 
         // Tyhjennä ruudukko
         function clearGrid() {
@@ -153,6 +217,17 @@
             });
         }
 
+        // Maalaa kaikki solut
+        function paintAllCells() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.style.backgroundColor = colorPicker.value;
+            });
+        }
+
+        // Liitä nappi funktioon
+        paintAllButton.addEventListener('click', paintAllCells);
+    
         // Lataa suunnitelma JSON-muodossa
         function downloadPattern() {
             const cells = document.querySelectorAll('.cell');
@@ -162,7 +237,14 @@
                 pattern.push(cell.style.backgroundColor || 'white');
             });
 
-            const blob = new Blob([JSON.stringify({ gridWidth, gridHeight, pattern })], { type: 'application/json' });
+            const data = {
+                gridWidth,
+                gridHeight,
+                pattern,
+                colorPalette // Tallennetaan myös väripaletti
+            };
+
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const link = document.getElementById('downloadLink');
             link.href = URL.createObjectURL(blob);
             link.style.display = 'block';  // Näytä latauslinkki
@@ -186,6 +268,15 @@
                 data.pattern.forEach((color, index) => {
                     cells[index].style.backgroundColor = color;
                 });
+
+                // Päivitä väripaletti, jos se on olemassa
+                if (data.colorPalette) {
+                    colorPalette = data.colorPalette;
+                    document.querySelectorAll('.palette-color').forEach((paletteElement, index) => {
+                        paletteElement.style.backgroundColor = colorPalette[index];
+                        paletteElement.setAttribute('data-color', colorPalette[index]);
+                    });
+                }
             };
             reader.readAsText(file);
         });
